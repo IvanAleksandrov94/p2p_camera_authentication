@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+
 var portnumber;
 
 const List<int> pppp_discover_datagram = [0xF1, 0x30, 0x00, 0x00];
@@ -63,9 +64,6 @@ const List<int> pppp_discover_datagram3 = [0xf1, 0xd0, 0x01, 0x5b, 0xd1, 0x00,
 0x6d, 0x69, 0x6e, 0x26, 0x75, 0x73, 0x65, 0x72, 0x3d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x26, 0x70,
 0x77, 0x64, 0x3d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x26];
 
-
-
-
 const List<int> pppp_discover_datagram4 = [0xf1, 0xd0, 0x00, 0x53, 0xd1, 0x00,
 0x00, 0x02, 0x01, 0x0a, 0x00, 0x00, 0x47, 0x00, 0x00, 0x00, 0x47, 0x45, 0x54, 0x20, 0x2f, 0x67,
 0x65, 0x74, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x2e, 0x63, 0x67, 0x69, 0x3f, 0x6c, 0x6f,
@@ -73,7 +71,6 @@ const List<int> pppp_discover_datagram4 = [0xf1, 0xd0, 0x00, 0x53, 0xd1, 0x00,
 0x69, 0x6e, 0x70, 0x61, 0x73, 0x3d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x26, 0x75, 0x73, 0x65, 0x72,
 0x3d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x26, 0x70, 0x77, 0x64, 0x3d, 0x61, 0x64, 0x6d, 0x69, 0x6e,
 0x26];
-
 
 const List<int> pppp_discover_datagram5 = [0xf1, 0xd0, 0x01, 0x0c, 0xd1, 0x00,
 0x00, 0x03, 0x01, 0x0a, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x47, 0x45, 0x54, 0x20, 0x2f, 0x73,
@@ -93,7 +90,6 @@ const List<int> pppp_discover_datagram5 = [0xf1, 0xd0, 0x01, 0x0c, 0xd1, 0x00,
 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x26, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x70, 0x61, 0x73, 0x3d, 0x61,
 0x64, 0x6d, 0x69, 0x6e, 0x26, 0x75, 0x73, 0x65, 0x72, 0x3d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x26,
 0x70, 0x77, 0x64, 0x3d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x26];
-
 
 const List<int> pppp_discover_datagram6 = [0xf1, 0xd0, 0x01, 0x74, 0xd1, 0x00,
 0x00, 0x04, 0x01, 0x0a, 0x00, 0x00, 0x4e, 0x00, 0x00, 0x00, 0x47, 0x45, 0x54, 0x20, 0x2f, 0x67,
@@ -121,168 +117,133 @@ const List<int> pppp_discover_datagram6 = [0xf1, 0xd0, 0x01, 0x74, 0xd1, 0x00,
 0x72, 0x3d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x26, 0x70, 0x77, 0x64, 0x3d, 0x61, 0x64, 0x6d, 0x69,
 0x6e, 0x26];
 
-
 const List<int> pppp_discover_datagramp = [0xF1, 0xe0, 0x00, 0x00];
+
 const List<int> pppp_discover_datagrampp = [0xF1, 0xd1, 0x00, 0x06, 0xd1, 0x00, 0x00, 0x01, 0x00, 0x00];
+
 bool click = false;
 
+RawDatagramSocket _udpSocket;
+Map<InternetAddress, P2PDevice> _ppppDevices = Map();
+int camportglobal;
 
-    RawDatagramSocket _udpSocket;
-    Map<InternetAddress, P2PDevice> _ppppDevices = Map();
-    int camportglobal;
-   
+/// Bind to UDP socket and enable broadcast
+void main() async {
+  try {
+    _udpSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+  } catch (e) {
+    rethrow;
+  }
 
-    /// Bind to UDP socket and enable broadcast
-    void main() async {
-        try {
-            _udpSocket =
-            await RawDatagramSocket.bind(InternetAddress.anyIPv4,  0);
-            
-        } catch (e) {
-            rethrow;
-        }
-                
-        _udpSocket.broadcastEnabled = true; // Enable Broadcast
-        print(_udpSocket.port);
-        _udpSocket.listen((_) =>
-            onSocketRead(_)); // Attach Socket Read Function
-    
+  _udpSocket.broadcastEnabled = true; // Enable Broadcast
+  print(_udpSocket.port);
+  _udpSocket.listen((_) => onSocketRead(_)); // Attach Socket Read Function
 
-    
-        if(_udpSocket != null){
-          _udpSocket.send(
-                pppp_discover_datagram, InternetAddress('192.168.31.119'),
-                32108);
+  if (_udpSocket != null) {
+    _udpSocket.send(
+        pppp_discover_datagram, InternetAddress('192.168.31.119'), 32108);
 
-                Datagram dg = _udpSocket.receive();
-                var cameraport =dg.port;
-                camportglobal=cameraport;
-                print(cameraport);
-                
-                _udpSocket.send(
-                pppp_discover_datagram1, InternetAddress('192.168.31.119'),
-                cameraport);
-                print("Sended");
-                
-                sleep(const Duration(seconds:1));
+    Datagram dg = _udpSocket.receive();
+    var cameraport = dg.port;
+    camportglobal = cameraport;
+    print(cameraport);
 
+    _udpSocket.send(
+        pppp_discover_datagram1, InternetAddress('192.168.31.119'), cameraport);
+    print("Sended");
 
-                _udpSocket.send(
-                pppp_discover_datagramp, InternetAddress('192.168.31.119'),
-                cameraport);
-                print("Sended");
+    sleep(const Duration(seconds: 1));
 
+    _udpSocket.send(
+        pppp_discover_datagramp, InternetAddress('192.168.31.119'), cameraport);
+    print("Sended");
 
-                _udpSocket.send(
-                pppp_discover_datagram2, InternetAddress('192.168.31.119'),
-                camportglobal);
-                print("Sended");
+    _udpSocket.send(pppp_discover_datagram2, InternetAddress('192.168.31.119'),
+        camportglobal);
+    print("Sended");
 
-                _udpSocket.send(
-                pppp_discover_datagramp, InternetAddress('192.168.31.119'),
-                cameraport);
-                print("Sended");
+    _udpSocket.send(
+        pppp_discover_datagramp, InternetAddress('192.168.31.119'), cameraport);
+    print("Sended");
 
-                sleep(const Duration(seconds:1));
+    sleep(const Duration(seconds: 1));
 
+    _udpSocket.send(pppp_discover_datagrampp, InternetAddress('192.168.31.119'),
+        cameraport);
+    print("Sended");
 
-                _udpSocket.send(
-                pppp_discover_datagrampp, InternetAddress('192.168.31.119'),
-                cameraport);
-                print("Sended");
+    _udpSocket.send(pppp_discover_datagram3, InternetAddress('192.168.31.119'),
+        camportglobal);
+    print("Sended");
 
+    sleep(const Duration(seconds: 1));
 
+    _udpSocket.send(pppp_discover_datagram4, InternetAddress('192.168.31.119'),
+        camportglobal);
+    print("Sended");
 
-                _udpSocket.send(
-                pppp_discover_datagram3, InternetAddress('192.168.31.119'),
-                camportglobal);
-                print("Sended");
+    sleep(const Duration(seconds: 5));
+  }
 
-                sleep(const Duration(seconds:1));
+  if (click == false) {
+    sleep(const Duration(seconds: 5));
 
+    _udpSocket.send(pppp_discover_datagram5, InternetAddress('192.168.31.119'),
+        camportglobal);
 
-                
-                _udpSocket.send(
-                pppp_discover_datagram4, InternetAddress('192.168.31.119'),
-                camportglobal);
-                print("Sended");
+    sleep(const Duration(seconds: 5));
 
-                sleep(const Duration(seconds:5));
+    _udpSocket.send(pppp_discover_datagram6, InternetAddress('192.168.31.119'),
+        camportglobal);
+    print("activated");
 
-        }
+    click == true;
+  }
 
-
-                if(click == false){
-
-                sleep(const Duration(seconds:5));
-
-                _udpSocket.send(
-                pppp_discover_datagram5, InternetAddress('192.168.31.119'),
-                camportglobal);
-
-                sleep(const Duration(seconds:5));
-
-                _udpSocket.send(
-                pppp_discover_datagram6, InternetAddress('192.168.31.119'),
-                camportglobal);
-                print("activated");
-
-                click == true;
-                }
-
-
-                _udpSocket.send(
-                pppp_discover_datagramp, InternetAddress('192.168.31.119'),
-                camportglobal);
-                print("Sended");
-        
-    }
-
-     onSocketRead(RawSocketEvent event) {
-        if (event == RawSocketEvent.read) {
-            final Datagram datagram = _udpSocket.receive();
-            if (datagram == null) return;
-            print("packet!");
-            List<String> datasocket = datagram.data.map((val) =>
-                val.toRadixString(16).padLeft(2, '0').toUpperCase()).toList();
-            _ppppDevices[datagram.address] ??= P2PDevice.fromDatagram(datagram);
-            _ppppDevices[datagram.address].datagramStream.add(datagram);
-            //print(datasocket);
-                
-        }
-    }
-
-
-
-class P2PDevice {
-    InternetAddress address;
-    int port;
-    final StreamController<Datagram> datagramStreamController;
-
-    Sink<Datagram> get datagramStream => datagramStreamController.sink;
-
-    P2PDevice({this.address, this.port})
-        : datagramStreamController = StreamController<Datagram>()
-    {
-        datagramStreamController.stream.listen((datagram)=>parseDatagram(datagram));
-    }
-
-    P2PDevice.fromDatagram(Datagram datagram)
-        : this(address: datagram.address, port: datagram.port);
-
-    void parseDatagram(Datagram datagram) {
-        print('Parsing!!!!!!!!!!!');
-        var info = String.fromCharCodes(datagram.data);
-        portnumber = datagram.port;
-        //print(info);
-        
-        
-    }
-
-    
-
-    void dispose() {
-        datagramStreamController.close();
-    }
+  _udpSocket.send(pppp_discover_datagramp, InternetAddress('192.168.31.119'),
+      camportglobal);
+  print("Sended");
 }
 
+onSocketRead(RawSocketEvent event) {
+  if (event == RawSocketEvent.read) {
+    final Datagram datagram = _udpSocket.receive();
+    if (datagram == null) return;
+    print("packet!");
+    List<String> datasocket = datagram.data
+        .map((val) => val.toRadixString(16).padLeft(2, '0').toUpperCase())
+        .toList();
+    _ppppDevices[datagram.address] ??= P2PDevice.fromDatagram(datagram);
+    _ppppDevices[datagram.address].datagramStream.add(datagram);
+    //print(datasocket);
+
+  }
+}
+
+class P2PDevice {
+  InternetAddress address;
+  int port;
+  final StreamController<Datagram> datagramStreamController;
+
+  Sink<Datagram> get datagramStream => datagramStreamController.sink;
+
+  P2PDevice({this.address, this.port})
+      : datagramStreamController = StreamController<Datagram>() {
+    datagramStreamController.stream
+        .listen((datagram) => parseDatagram(datagram));
+  }
+
+  P2PDevice.fromDatagram(Datagram datagram)
+      : this(address: datagram.address, port: datagram.port);
+
+  void parseDatagram(Datagram datagram) {
+    print('Parsing!!!!!!!!!!!');
+    var info = String.fromCharCodes(datagram.data);
+    portnumber = datagram.port;
+    //print(info);
+  }
+
+  void dispose() {
+    datagramStreamController.close();
+  }
+}
